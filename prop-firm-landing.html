@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funded — Prop Firm Pass Signals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E12;
+    --surface:#121821;
+    --surface-2:#1A222C;
+    --line:#232C38;
+    --text:#EDF1F5;
+    --muted:#7C8B9E;
+    --green:#3ECF8E;
+    --red:#FF5C5C;
+    --amber:#E8A93E;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+
+  /* ---- Ticker ---- */
+  .ticker{
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+    overflow:hidden;
+    white-space:nowrap;
+    padding:9px 0;
+  }
+  .ticker-track{
+    display:inline-block;
+    animation: scroll 28s linear infinite;
+  }
+  .ticker-track span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-right:36px;
+  }
+  .ticker-track span b{ color:var(--green); font-weight:500; }
+  @keyframes scroll{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-50%); }
+  }
+
+  /* ---- Nav ---- */
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 0;
+  }
+  .logo{ font-size:19px; font-weight:700; letter-spacing:-0.02em; }
+  .logo span{ color:var(--green); }
+  .nav-cta{
+    border:1px solid var(--line);
+    padding:9px 18px;
+    border-radius:3px;
+    font-size:13.5px;
+    font-weight:500;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .nav-cta:hover{ border-color:var(--green); color:var(--green); }
+
+  /* ---- Hero ---- */
+  .hero{
+    padding:64px 0 40px;
+    position:relative;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--amber);
+    background:rgba(232,169,62,0.08);
+    border:1px solid rgba(232,169,62,0.25);
+    padding:5px 11px;
+    border-radius:20px;
+    margin-bottom:22px;
+  }
+  .eyebrow::before{
+    content:''; width:6px; height:6px; border-radius:50%;
+    background:var(--amber); display:inline-block;
+  }
+  .hero h1{
+    font-size:clamp(34px, 5.4vw, 58px);
+    line-height:1.04;
+    max-width:820px;
+  }
+  .hero h1 em{
+    font-style:normal;
+    color:var(--green);
+  }
+  .hero p{
+    color:var(--muted);
+    font-size:17px;
+    max-width:520px;
+    margin-top:20px;
+  }
+  .hero-ctas{
+    display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;
+  }
+  .btn-primary{
+    background:var(--green);
+    color:#08130E;
+    font-weight:600;
+    font-size:14.5px;
+    padding:13px 24px;
+    border-radius:3px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(62,207,142,0.25); }
+  .btn-secondary{
+    border:1px solid var(--line);
+    font-size:14.5px;
+    font-weight:500;
+    padding:13px 24px;
+    border-radius:3px;
+    color:var(--text);
+    transition:border-color .15s ease;
+  }
+  .btn-secondary:hover{ border-color:var(--muted); }
+
+  /* ---- Chart signature element ---- */
+  .chart-panel{
+    margin-top:52px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:22px 22px 8px;
+  }
+  .chart-head{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:12px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chart-head .legend{ display:flex; gap:16px; flex-wrap:wrap; }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.green{ background:var(--green); }
+  .dot.red{ background:var(--red); }
+  .dot.text{ background:var(--text); }
+  svg#curve{ width:100%; height:auto; display:block; }
+  .path-balance{
+    fill:none; stroke:var(--text); stroke-width:2.5;
+    stroke-dasharray:900; stroke-dashoffset:900;
+    animation: draw 2.4s cubic-bezier(.4,0,.2,1) forwards .3s;
+  }
+  .path-target{ stroke:var(--green); stroke-width:1; stroke-dasharray:4 4; fill:none; opacity:0.7;}
+  .path-floor{ stroke:var(--red); stroke-width:1; stroke-dasharray:4 4; fill:none; opacity:0.7;}
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .chart-foot{
+    display:flex; justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+    padding:10px 0 16px;
+  }
+
+  /* ---- Problem section ---- */
+  section{ padding:76px 0; }
+  .section-head{ max-width:600px; margin-bottom:44px; }
+  .section-head .eyebrow{ margin-bottom:16px; }
+  .section-head h2{ font-size:clamp(26px,3.4vw,36px); line-height:1.15; }
+  .section-head p{ color:var(--muted); margin-top:14px; font-size:15.5px; }
+
+  .stat-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .stat-cell{
+    background:var(--surface);
+    padding:28px 24px;
+  }
+  .stat-cell .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:32px;
+    color:var(--red);
+    font-weight:500;
+  }
+  .stat-cell .num.g{ color:var(--green); }
+  .stat-cell .label{
+    color:var(--muted);
+    font-size:13.5px;
+    margin-top:8px;
+  }
+
+  /* ---- Pricing ---- */
+  .pricing-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
+  }
+  .tier{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:28px 24px;
+    display:flex; flex-direction:column;
+    position:relative;
+  }
+  .tier.featured{
+    border-color:var(--green);
+    box-shadow:0 0 0 1px var(--green), 0 20px 40px -20px rgba(62,207,142,0.3);
+  }
+  .tier-badge{
+    position:absolute; top:-11px; left:24px;
+    background:var(--green); color:#08130E;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; font-weight:500;
+    padding:3px 10px; border-radius:20px;
+  }
+  .tier-name{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
+  .tier-price{ font-size:34px; font-weight:700; font-family:'Space Grotesk',sans-serif; margin-top:10px; }
+  .tier-price span{ font-size:14px; color:var(--muted); font-weight:400; font-family:'IBM Plex Sans',sans-serif;}
+  .tier-desc{ color:var(--muted); font-size:14px; margin-top:10px; min-height:40px; }
+  .tier-list{ list-style:none; margin-top:22px; flex:1; }
+  .tier-list li{
+    font-size:14px; color:var(--text);
+    padding:9px 0;
+    border-top:1px solid var(--line);
+    display:flex; gap:10px;
+  }
+  .tier-list li::before{ content:'—'; color:var(--muted); }
+  .tier-btn{
+    margin-top:24px;
+    text-align:center;
+    padding:12px;
+    border-radius:3px;
+    font-size:14px;
+    font-weight:600;
+    border:1px solid var(--line);
+  }
+  .tier.featured .tier-btn{ background:var(--green); color:#08130E; border-color:var(--green); }
+
+  /* ---- Trust ---- */
+  .trust-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:36px;
+    display:flex; align-items:center; gap:28px; flex-wrap:wrap;
+  }
+  .trust-badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; color:var(--amber);
+    border:1px solid rgba(232,169,62,0.3);
+    background:rgba(232,169,62,0.08);
+    padding:6px 12px; border-radius:20px;
+    white-space:nowrap;
+  }
+  .trust-panel p{ color:var(--muted); font-size:14.5px; flex:1; min-width:220px; }
+
+  /* ---- Footer CTA ---- */
+  .final-cta{
+    text-align:center;
+    padding:90px 0 100px;
+  }
+  .final-cta h2{ font-size:clamp(28px,4vw,42px); max-width:600px; margin:0 auto; }
+  .final-cta p{ color:var(--muted); margin:16px auto 30px; max-width:440px; }
+  footer{
+    border-top:1px solid var(--line);
+    padding:28px 0;
+    color:var(--muted);
+    font-size:13px;
+    display:flex; justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width:820px){
+    .stat-grid{ grid-template-columns:1fr; }
+    .pricing-grid{ grid-template-columns:1fr; }
+    .tier.featured{ order:-1; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .path-balance{ animation:none; stroke-dashoffset:0; }
+    .ticker-track{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>FTMO PASS <b>+8.2%</b> · @adaeze_fx</span>
+      <span>THE5ERS PASS <b>+6.1%</b> · @tunde.trades</span>
+      <span>MYFUNDEDFX PASS <b>+9.4%</b> · @ChiomaP</span>
+      <span>FTMO PASS <b>+7.6%</b> · @Kelv_FX</span>
+      <span>BLUE GUARDIAN PASS <b>+5.9%</b> · @amara_trades</span>
+      <span>FTMO PASS <b>+8.2%</b> · @adaeze_fx</span>
+      <span>THE5ERS PASS <b>+6.1%</b> · @tunde.trades</span>
+      <span>MYFUNDEDFX PASS <b>+9.4%</b> · @ChiomaP</span>
+      <span>FTMO PASS <b>+7.6%</b> · @Kelv_FX</span>
+      <span>BLUE GUARDIAN PASS <b>+5.9%</b> · @amara_trades</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <nav>
+      <div class="logo">FUNDED<span>.</span></div>
+      <a href="#pricing" class="nav-cta">See Pricing</a>
+    </nav>
+
+    <section class="hero" style="padding-top:56px;">
+      <div class="eyebrow">Built for prop firm challenges</div>
+      <h1>Stay above the floor.<br>Reach the <em>target.</em></h1>
+      <p>Daily signals sized to your firm's exact drawdown rules, plus direct support until you pass — so a good call never gets wasted by bad position sizing.</p>
+      <div class="hero-ctas">
+        <a href="#pricing" class="btn-primary">Start Passing →</a>
+        <a href="#trust" class="btn-secondary">View Track Record</a>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-head">
+          <span>ACCOUNT EQUITY — 30 DAY CHALLENGE</span>
+          <div class="legend">
+            <span class="legend-item"><span class="dot text"></span>Balance</span>
+            <span class="legend-item"><span class="dot green"></span>Target</span>
+            <span class="legend-item"><span class="dot red"></span>Max Drawdown</span>
+          </div>
+        </div>
+        <svg id="curve" viewBox="0 0 900 260" preserveAspectRatio="none">
+          <line class="path-target" x1="0" y1="55" x2="900" y2="55"></line>
+          <line class="path-floor" x1="0" y1="215" x2="900" y2="215"></line>
+          <path class="path-balance" d="M0,170 C60,180 90,150 130,155 C170,160 190,120 230,125 C270,130 300,100 340,95 C380,90 400,140 440,135 C480,130 510,90 550,80 C590,70 620,100 660,90 C700,80 730,60 770,55 C810,50 850,45 900,40"></path>
+        </svg>
+        <div class="chart-foot">
+          <span>DAY 1</span>
+          <span>DAY 30</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">The real reason challenges fail</div>
+        <h2>It's rarely the signal. It's the sizing.</h2>
+        <p>Most traders don't fail because the call was wrong — they fail because one oversized position broke the firm's daily loss limit before the trade had room to work.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-cell">
+          <div class="num">40–50%</div>
+          <div class="label">of challenge attempts fail industry-wide</div>
+        </div>
+        <div class="stat-cell">
+          <div class="num">#1</div>
+          <div class="label">cause: breaching daily or max drawdown, not bad entries</div>
+        </div>
+        <div class="stat-cell">
+          <div class="num g">15–20%</div>
+          <div class="label">failure rate for traders using structured risk guidance</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="section-head">
+        <div class="eyebrow">Pricing</div>
+        <h2>Pick your level of support.</h2>
+        <p>All plans include entries, stops, and targets. The difference is how close we work with you to keep sizing inside your firm's rules.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="tier">
+          <div class="tier-name">Signal Access</div>
+          <div class="tier-price">$68<span>/mo</span></div>
+          <div class="tier-desc">For traders who manage their own risk and just need the calls.</div>
+          <ul class="tier-list">
+            <li>Daily entry, stop &amp; target signals</li>
+            <li>Telegram/WhatsApp delivery</li>
+            <li>Weekly market outlook</li>
+            <li>Position sizing calculator</li>
+          </ul>
+          <a href="#" class="tier-btn">Subscribe</a>
+        </div>
+        <div class="tier featured">
+          <div class="tier-badge">Most traders pick this</div>
+          <div class="tier-name">Guided Pass</div>
+          <div class="tier-price">$220<span>/challenge</span></div>
+          <div class="tier-desc">Signals sized to your specific firm's rules, with support until you pass.</div>
+          <ul class="tier-list">
+            <li>Everything in Signal Access</li>
+            <li>Sized to your firm's drawdown limits</li>
+            <li>Weekly 1-on-1 trade log review</li>
+            <li>Direct message support during your challenge</li>
+          </ul>
+          <a href="#" class="tier-btn">Start Guided Pass</a>
+        </div>
+        <div class="tier">
+          <div class="tier-name">Full Mentorship</div>
+          <div class="tier-price">$250<span>/mo</span></div>
+          <div class="tier-desc">For traders building toward independent, funded trading long-term.</div>
+          <ul class="tier-list">
+            <li>Everything in Guided Pass</li>
+            <li>Weekly live trade breakdowns</li>
+            <li>Personal risk management plan</li>
+            <li>Priority support</li>
+          </ul>
+          <a href="#" class="tier-btn">Apply for Mentorship</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="trust">
+      <div class="trust-panel">
+        <span class="trust-badge">✓ VERIFIED TRACK RECORD</span>
+        <p>All results linked to a verified myfxbook or broker statement — no cherry-picked screenshots. Link your live verification here once it's set up.</p>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <h2>Your challenge has a deadline. Don't fail it on sizing.</h2>
+      <p>Get today's signal and see exactly how it's sized for your firm's rules.</p>
+      <a href="#pricing" class="btn-primary">Get Started →</a>
+    </section>
+
+    <footer>
+      <span>FUNDED</span>
+      <span>signals · risk-sized · verified</span>
+    </footer>
+  </div>
+
+</body>
+</html>
